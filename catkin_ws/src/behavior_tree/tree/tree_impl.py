@@ -1,4 +1,6 @@
-from nodes.node import Behavior
+#!/usr/bin/env python3
+
+from node import Behavior
 
 class Tree:
 

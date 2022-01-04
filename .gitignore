@@ -1,4 +1,9 @@
 .DS_Store
-nodes/__pycache__
-tree/__pycache__
 .gitattributes
+catkin_ws/build
+catkin_ws/devel
+.catkin_workspace
+catkin_ws/src/behavior_tree/controllers/__pycache__
+catkin_ws/src/behavior_tree/nodes/__pycache__
+catkin_ws/src/behavior_tree/scripts/__pycache__
+catkin_ws/src/behavior_tree/tree/__pycache__

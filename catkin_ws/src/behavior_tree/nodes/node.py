@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from enum import Enum
 
 class STATUS(Enum):
@@ -44,6 +46,43 @@ class Decorator(Behavior):
     def __init__(self, child: Behavior):
         super().__init__()
         self.child = child
+
+# Inverts the result unless running.
+class Inverter(Decorator):
+    def __init__(self, child: Behavior):
+        super().__init__(child)
+    
+    def _update(self, blackboard: dict):
+        status = self.child.tick(blackboard)
+        if status == STATUS.SUCCESS:
+            return STATUS.FAILURE
+        elif status == STATUS.FAILURE:
+            return STATUS.SUCCESS
+        return status
+
+# Forces the result to be SUCCESS after a single tick.
+class ForceSuccess(Decorator):
+    
+    def __init__(self, child: Behavior):
+        super().__init__(child)
+    
+    def _update(self, blackboard: dict):
+        self.child.tick(blackboard)
+        return STATUS.SUCCESS
+
+# Repeatedly ticks the child until it returns a success
+class RepeatUntilSuccess(Decorator):
+
+    def __init__(self, child: Behavior):
+        super().__init__(child)
+
+    def _update(self, blackboard: dict):
+        while True:
+            status = self.child.tick(blackboard)
+            if status == STATUS.SUCCESS:
+                return STATUS.SUCCESS
+        # Unexpected exit
+        return STATUS.INVALID
 
 # Repeatedly executes the child behavior n times.
 class Repeat(Decorator):
