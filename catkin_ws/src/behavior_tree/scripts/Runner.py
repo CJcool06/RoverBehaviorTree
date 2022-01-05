@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Adds all files to the import path.
 import os, sys
 from pathlib import Path
 parent_dir = Path(os.path.dirname(__file__)).parent.absolute()

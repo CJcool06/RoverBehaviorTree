@@ -3,34 +3,55 @@
 from enum import Enum
 
 class STATUS(Enum):
+    """
+    All possible return status' of a behavior.
+    """
+
     SUCCESS = 0
     RUNNING = 1
     FAILURE = 2
     INVALID = 3
 
-# Lowest-level class that makes up the building block of every other behavior else
+
 class Behavior:
+    """
+    Lowest-level class that makes up the building block of every other class.
+    """
 
     def __init__(self):
         self.status = STATUS.INVALID
 
-    # Initialises the behavior
     def _on_initialise(self, blackboard: dict):
+        """
+        Setup the behavior prior to being run for the first time
+        since being stopped.
+        """
         pass
 
-    # Cleanup the behavior
     def _on_terminate(self, status: STATUS, blackboard: dict):
+        """
+        Clean up the behavior after being stopped.
+        """
         pass
 
-    # Update the behavior
     def _update(self, blackboard: dict):
+        """
+        Update the behavior.
+        """
         pass
 
     def get_status(self):
+        """
+        Gets the behavior's status from the most recent tick.
+        """
         return self.status
 
-    # Wrapper to update the behavior while adhering to the behavior tree contract
     def tick(self, blackboard: dict):
+        """
+        A wrapper to update the behavior while adhering to the behavior tree contract.
+        Returns the status from being updated.
+        """
+
         # If behavior is not running, initialise it
         if self.status != STATUS.RUNNING:
             self._on_initialise(blackboard)
@@ -40,15 +61,22 @@ class Behavior:
             self._on_terminate(self.status, blackboard)
         return self.status
 
-# A behavior with a child behavior. Can be considered a wrapper for the child behavior.
+
 class Decorator(Behavior):
+    """
+    A behavior with a child behavior. Can be considered a wrapper for the child behavior.
+    """
 
     def __init__(self, child: Behavior):
         super().__init__()
         self.child = child
 
-# Inverts the result unless running.
+
 class Inverter(Decorator):
+    """
+    Inverts the result unless RUNNING is returned.
+    """
+
     def __init__(self, child: Behavior):
         super().__init__(child)
     
@@ -60,8 +88,11 @@ class Inverter(Decorator):
             return STATUS.SUCCESS
         return status
 
-# Forces the result to be SUCCESS after a single tick.
+
 class ForceSuccess(Decorator):
+    """
+    Forces the result to be SUCCESS after a single tick.
+    """
     
     def __init__(self, child: Behavior):
         super().__init__(child)
@@ -70,8 +101,11 @@ class ForceSuccess(Decorator):
         self.child.tick(blackboard)
         return STATUS.SUCCESS
 
-# Repeatedly ticks the child until it returns a success
+
 class RepeatUntilSuccess(Decorator):
+    """
+    Repeatedly ticks the child until it returns SUCCESS.
+    """
 
     def __init__(self, child: Behavior):
         super().__init__(child)
@@ -84,8 +118,11 @@ class RepeatUntilSuccess(Decorator):
         # Unexpected exit
         return STATUS.INVALID
 
-# Repeatedly executes the child behavior n times.
+
 class Repeat(Decorator):
+    """
+    Repeatedly executes the child behavior n times.
+    """
 
     repeats_counter = 0
 
@@ -111,8 +148,11 @@ class Repeat(Decorator):
         # Unexpected exit
         return STATUS.INVALID
 
-# A behavior with multiple child behaviors.
+
 class Composite(Behavior):
+    """
+    A behavior with multiple child behaviors.
+    """
 
     current_child = 0
 
@@ -121,21 +161,35 @@ class Composite(Behavior):
         self.children = []
 
     def addChild(self, child: Behavior):
+        """
+        Adds a new child behavior.
+        """
+
         self.children.append(child)
         return self
     
     def removeChild(self, child: Behavior):
+        """
+        Removes a child behavior.
+        """
+
         self.children.remove(child)
         return self
     
     def clearChildren(self):
+        """
+        Clear all child behaviors.
+        """
+
         self.children.clear()
         return self
     
 
-# A sequence executes each of its child behaviors in order until all of the
-# children have executed successfully or until one of its child behaviors fail.
 class Sequence(Composite):
+    """
+    A sequence executes each of its child behaviors in order until all of the
+    children have executed successfully or until one of its child behaviors fail.
+    """
 
     def __init__(self):
         super().__init__()
@@ -155,9 +209,12 @@ class Sequence(Composite):
         # Unexpected exit
         return STATUS.INVALID
 
-# A fallback executes each of its child behaviors in order until it
-# finds a child that either succeeds or that returns a RUNNING status.
+
 class Fallback(Composite):
+    """
+    A fallback executes each of its child behaviors in order until it
+    finds a child that either succeeds or that returns a RUNNING status.
+    """
 
     def __init__(self):
         super().__init__()
@@ -178,17 +235,28 @@ class Fallback(Composite):
         # Unexpected exit
         return STATUS.INVALID
 
-# Conditions must return success to reach actions.
+
 class Filter(Sequence):
+    """
+    Conditions must return success to reach actions.
+    """
 
     def __init__(self):
         super().__init__()
     
     def addCondition(self, condition: Behavior):
+        """
+        Adds a condition to the front of the array.
+        """
+        
         self.children.insert(0, condition)
         return self
     
     def addAction(self, action: Behavior):
+        """
+        Adds an action to the end of the array.
+        """
+
         self.children.append(action)
         return self
 

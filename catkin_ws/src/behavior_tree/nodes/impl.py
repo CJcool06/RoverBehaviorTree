@@ -5,20 +5,36 @@ from std_msgs.msg import String
 
 from node import *
 
-# Checks if the rover has a destination to move to.
+
 class HasDestination(Behavior):
+    """
+    Checks if the rover has a destination to move to.
+
+    SUCCESS: A destination exists in the blackboard.
+    FAILURE: A destination does not exist in the blackboard.
+    RUNNING: --
+    INVALID: --
+    """
 
     def __init__(self):
         super().__init__()
 
     def _update(self, blackboard: dict):
-        print('has_dest')
         if blackboard['destination'] is not None:
             return STATUS.SUCCESS
         return STATUS.FAILURE
 
-# Asks for a destination.
+
 class GetDestination(Behavior):
+    """
+    Asks for a destination from the DestinationController.
+    If one is received, the destination is added to the blackboard.
+
+    SUCCESS: The controller has a destination.
+    FAILURE: --
+    RUNNING: Waiting for a destination from the controller.
+    INVALID: --
+    """
 
     def __init__(self, destination_controller):
         super().__init__()
@@ -27,38 +43,56 @@ class GetDestination(Behavior):
     def _on_initialise(self, blackboard: dict):
         super()._on_initialise(blackboard)
         self.controller.destination = None
-        self.controller.start_listening()
+        self.controller.start_listening()   # Can be removed
     
     def _on_terminate(self, status: STATUS, blackboard: dict):
         super()._on_terminate(status, blackboard)
-        self.controller.stop_listening()
+        self.controller.stop_listening()    # Can be removed
         
     def _update(self, blackboard: dict):
-        print('get_dest')
         if self.controller.destination is not None:
             blackboard['destination'] = self.controller.destination
             return STATUS.SUCCESS
         return STATUS.RUNNING
 
-# Checks if the rover is at the destination.
+
+# TODO
 class AtDestination(Behavior):
+    """
+    Checks if the rover is at the destination.
+
+    SUCCESS: The rover is within TODO: (X cm) of the threshold.
+    FAILURE: The rover is not at the destination.
+    RUNNING: --
+    INVALID: --
+    """
+
+
     def __init__(self):
         super().__init__()
 
     def _update(self, blackboard: dict):
-        print('at_dest')
         if blackboard['destination']['x'] == blackboard['current_pos']['x'] \
         and blackboard['destination']['y'] == blackboard['current_pos']['y']:
             return STATUS.SUCCESS
         return STATUS.FAILURE
 
-# Moves the rover toward the destination.
+
+# TODO
 class MoveTowardDestination(Behavior):
+    """
+    Sends an instruction to the move controller.
+
+    SUCCESS: The instruction was sent.
+    FAILURE: There was a problem sending the instruction.
+    RUNNING: --
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
     def _update(self, blackboard: dict):
-        print('moving')
         blackboard['is_moving'] = True
         if blackboard['current_pos']['x'] < blackboard['destination']['x']:
             blackboard['current_pos']['x'] += 1
@@ -71,8 +105,18 @@ class MoveTowardDestination(Behavior):
         
         return STATUS.SUCCESS
 
-# Clears the destination
+
 class ClearDestination(Behavior):
+    """
+    Clears the destination from the blackboard.
+
+    SUCCESS: The destination was cleared.
+    FAILURE: --
+    RUNNING: --
+    INVALID: --
+    """
+
+
     def __init__(self):
         super().__init__()
 
@@ -80,8 +124,18 @@ class ClearDestination(Behavior):
         blackboard['destination'] = None
         return STATUS.SUCCESS
 
-# Checks if the rover is currently moving.
+
+# TODO
 class IsMoving(Behavior):
+    """
+    Checks if the rover is currently moving.
+
+    SUCCESS: The rover is moving.
+    FAILURE: The rover is not moving.
+    RUNNING: --
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -90,8 +144,18 @@ class IsMoving(Behavior):
             return STATUS.SUCCESS
         return STATUS.FAILURE
 
-# Stops the rover's movement.
+
+# TODO
 class StopMoving(Behavior):
+    """
+    Stops the rover's movement.
+
+    SUCCESS: The rover is no longer moving.
+    FAILURE: --
+    RUNNING: The rover is still moving.
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
     
@@ -113,8 +177,18 @@ class StopMoving(Behavior):
             return STATUS.SUCCESS
         return STATUS.RUNNING
 
-# Checks if the rover has a current planned path.
+
+# TODO
 class HasPath(Behavior):
+    """
+    Checks if the rover has a current planned path.
+
+    SUCCESS: The rover has a path.
+    FAILURE: The rover does not have a path.
+    RUNNING: --
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -123,8 +197,18 @@ class HasPath(Behavior):
             return STATUS.SUCCESS
         return STATUS.FAILURE
 
-# Checks if the rover has a current planned path.
+
+# TODO
 class PlanPath(Behavior):
+    """
+    Checks if the rover has a current planned path.
+
+    SUCCESS: A path was successfully planned.
+    FAILURE: A path was unsuccessfully planned.
+    RUNNING: --
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -132,8 +216,18 @@ class PlanPath(Behavior):
         blackboard['path'] = 'Go to destination'
         return STATUS.SUCCESS
 
-# Resets the planned path.
+
+# TODO
 class ResetPath(Behavior):
+    """
+    Resets the planned path.
+
+    SUCCESS: The path was cleared from the blackboard.
+    FAILURE: --
+    RUNNING: --
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -141,21 +235,40 @@ class ResetPath(Behavior):
         blackboard['path'] = None
         return STATUS.SUCCESS
 
-# Checks if the current path has been blocked by an object.
+
+# TODO
 class PathBlocked(Behavior):
+    """
+    Checks if the current path has been blocked by an object.
+
+    SUCCESS: The path has been blocked.
+    FAILURE: The path is clear.
+    RUNNING: --
+    INVALID: --
+    """
+    
     def __init__(self):
         super().__init__()
 
     def _update(self, blackboard: dict):
         return STATUS.FAILURE
 
-# For one reason or another, a path was unable to be planned.
-# Perform an emergency movement.
+
+# TODO
 class EmergencyMovement(Behavior):
+    """
+    For one reason or another, a path was unable to be planned.
+    Perform an emergency movement.
+
+    SUCCESS: The movement has completed.
+    FAILURE: Something else went wrong.
+    RUNNING: The movement is in-progress.
+    INVALID: --
+    """
+
     def __init__(self):
         super().__init__()
 
     def _update(self, blackboard: dict):
         print('EMERGENCY!')
-        # TODO
         return STATUS.SUCCESS

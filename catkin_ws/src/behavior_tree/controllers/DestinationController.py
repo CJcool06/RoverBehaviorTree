@@ -9,8 +9,10 @@ import threading
 class DestinationController():
     """
     The Destination Controller handles how the rover receives destinations from input.
-    This class is meant to be used by both the Comms.py script (publishes input) and
-    the GetDestination behavior (listens for input). Classes have a separate instance.
+    This class is meant to be used by both the behavior_tree_comms node (publisher) and
+    the behavior_tree_runner node (listener).
+    
+    Nodes have a separate instance.
     """
 
     def __init__(self):
@@ -20,6 +22,10 @@ class DestinationController():
         self.listening = False
 
     def open_publisher(self):
+        """
+        Opens the publisher topic and starts the publisher thread.
+        """
+
         publisher = rospy.Publisher('behavior_tree/controller/destination', String, queue_size=10)
 
         # Publish input on different thread.
@@ -28,23 +34,45 @@ class DestinationController():
         pub_thread.start()
     
     def open_subscriber(self):
+        """
+        Opens the subscriber topic.
+        """
+
         # callback_lambda = lambda data : handle_input(data, controller)
         callback_lambda = lambda data : self._handle_input(data)
         subscriber = rospy.Subscriber('behavior_tree/controller/destination', String, callback_lambda)
 
     def start_publishing(self):
+        """
+        Indicates that the publisher should start publishing.
+        """
         self.publishing =  True
 
     def stop_publishing(self):
+        """
+        Indicates that the publisher should stop publishing.
+        """
         self.publishing = False
 
     def start_listening(self):
+        """
+        Indicates that the subscriber should start listening.
+        """
         self.listening = True
     
     def stop_listening(self):
+        """
+        Indicates that the subscriber should stop listening.
+        """
         self.listening = False
     
     def _handle_input(self, input):
+        """
+        If the subscriber should be listening, receive the published message.
+
+        The message should be a string {x y} where x,y are floats.
+        """
+
         if self.listening:
             nums = input.data.split()
             self.destination = {
@@ -53,6 +81,13 @@ class DestinationController():
             }
     
     def _sanitise(self, inp_x, inp_y):
+        """
+        Sanitises the input before publishing it to the topic.
+
+        Ensures that the two inputs are floats, then returns {x y}.
+        Otherwise returns None
+        """
+
         try:
             x = float(inp_x)
             y = float(inp_y)
@@ -62,6 +97,10 @@ class DestinationController():
             return None
 
     def _threaded_publisher(self, publisher):
+        """
+        If the publisher should be publishing, send the sanitised message to the topic.
+        """
+
         try:
             while not rospy.is_shutdown():
                 inp_x = input('Enter coordinate x: ')
