@@ -18,7 +18,7 @@ from DestinationController import DestinationController
 if __name__ == '__main__':
 
     # Init rospy
-    rospy.init_node('listener', anonymous=True)
+    rospy.init_node('behavior_tree_comms', anonymous=False)
 
     # Create controller
     controller = DestinationController()

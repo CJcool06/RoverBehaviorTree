@@ -173,7 +173,7 @@ def Blackboard():
 if __name__ == '__main__':
 
     # Subscribes to the DestinationController.
-    rospy.init_node('listener', anonymous=True)
+    rospy.init_node('behavior_tree_runner', anonymous=False)
     destination_controller = DestinationController()
     destination_controller.open_subscriber()
     
