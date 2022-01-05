@@ -21,4 +21,4 @@ Each of these commands should be run in individual bash instances.
 2. `rosrun behavior_tree Comms.py`
 3. `rosrun behavior_tree Runner.py`
 
-At this stage you can use the `Comms` terminal to input coordinates while the `Runner` node simulates the behavior tree states.
+At this stage you can use the `behavior_tree_comms` node terminal to input coordinates while the `behavior_tree_runner` node simulates the behavior tree states.
