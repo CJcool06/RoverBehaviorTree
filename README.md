@@ -4,14 +4,18 @@
 ## Installation
 Follow these instructions to clone and setup this repository.  
 
+### Setup Catkin Workspace
+`mkdir -p catkin_ws/src`
+`cd catkin_ws`
+`catkin build`
+`cd catkin_ws/src`
+
 ### Clone Repo
 `git clone https://github.com/CJcool06/RoverBehaviorTree.git`
 
-### Build Catkin Workspace
-`cd path/to/repo/RoverBehaviorTree/catkin_ws`
-`catkin_build`
-
 ### Source Workspace
+`cd ..`
+`catkin build`
 `source devel/setup.bash`
 
 ## Running
