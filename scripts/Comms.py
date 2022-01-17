@@ -9,10 +9,6 @@ sys.path.append(os.path.join(parent_dir, "nodes"))
 sys.path.append(os.path.join(parent_dir, "controllers"))
 
 import rospy
-from std_msgs.msg import String
-
-from queue import Queue
-import threading
 
 from DestinationController import DestinationController
 

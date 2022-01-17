@@ -3,7 +3,6 @@
 import rospy
 from std_msgs.msg import String
 
-from queue import Queue
 import threading
 
 class DestinationController():
