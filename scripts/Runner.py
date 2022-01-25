@@ -8,13 +8,15 @@ sys.path.append(os.path.join(parent_dir, "tree"))
 sys.path.append(os.path.join(parent_dir, "nodes"))
 sys.path.append(os.path.join(parent_dir, "controllers"))
 
+import rospy
 from tree_impl import Tree
 from node import Fallback, Sequence, ForceSuccess, RepeatUntilSuccess, Inverter
 from impl import *
 from DestinationController import DestinationController
+from LocalisationController import LocalisationController
 import time
 
-def Root(destination_controller):
+def Root(destination_controller: DestinationController, localisation_controller: LocalisationController):
     """
     Root of the behavior tree.
 
@@ -28,10 +30,10 @@ def Root(destination_controller):
             # Success if there's a destination.
             .addChild(EnsureDestination(destination_controller))
             # --
-            .addChild(ChecksAndMoveFallback())
+            .addChild(ChecksAndMoveFallback(localisation_controller))
     )
 
-def EnsureDestination(destination_controller):
+def EnsureDestination(destination_controller: DestinationController):
     """
     If there is no destination, listen for input and report running.
 
@@ -47,19 +49,22 @@ def EnsureDestination(destination_controller):
             .addChild(GetDestination(destination_controller))
     )
 
-def ChecksAndMoveFallback():
+def ChecksAndMoveFallback(localisation_controller: LocalisationController):
     """
     Ensures that the pre-requisites are fulfilled, then moves toward the destination.
 
     Children:
     1. Performs important checks before proceeding.
-    2. Ensures that a path exists to reach the destination.
-    3. Enter the final checks, then move toward the destination.
+    2. Ensures we are localised properly.
+    3. Ensures that a path exists to reach the destination.
+    4. Enter the final checks, then move toward the destination.
     """
     return (
         Fallback()
             # Success if checks fail.
             .addChild(ImportantChecks())
+            # Success if re-localised.
+            .addChild(EnsureLocalisation(localisation_controller))
             # Success if a path is not ensured.
             .addChild(Inverter(EnsurePath()))
             # Success if the rover submitted a move command.
@@ -91,6 +96,10 @@ def ImportantChecks():
 def EnsureNotMoving():
     """
     Ensures that the rover will no longer be moving.
+    
+    Children:
+    1. Checks if we are moving.
+    2. Stop moving.
     """
     return (
         ForceSuccess(
@@ -100,6 +109,38 @@ def EnsureNotMoving():
                 # Always success.
                 .addChild(RepeatUntilSuccess(StopMoving()))
         )
+    )
+    
+def EnsureLocalisation(localisation_controller: LocalisationController):
+    """
+    Ensures that we are localised as accurately as we can be.
+    
+    Children:
+    1. Checks if a tag is being detected.
+    2. Determine if it would be beneificial to re-localise.
+    3. Re-Localise.
+    """
+    return (
+        Sequence()
+            .addChild(TagDetected(localisation_controller))
+            .addChild(ShouldReLocalise(localisation_controller))
+            .addChild(ForceSuccess(ReLocalisation(localisation_controller)))
+    )
+
+def ReLocalisation(localisation_controller: LocalisationController):
+    """
+    Re-Localises the rover's position.
+    
+    Children:
+    1. Stop moving.
+    2. Re-Localise.
+    3. Reset the current planned path.
+    """
+    return (
+        Sequence()
+            .addChild(EnsureNotMoving())
+            .addChild(ReLocalise(localisation_controller))
+            .addChild(ResetPath())
     )
 
 def EnsurePath():
@@ -175,11 +216,12 @@ if __name__ == '__main__':
 
     # Subscribes to the DestinationController.
     rospy.init_node('behavior_tree_runner', anonymous=False)
+    localisation_controller = LocalisationController(10)
     destination_controller = DestinationController()
     destination_controller.open_subscriber()
     
     # Instantiates the tree.
-    tree = Tree(Root(destination_controller), Blackboard())
+    tree = Tree(Root(destination_controller, localisation_controller), Blackboard())
 
     try:
         # Tick the tree every interval.

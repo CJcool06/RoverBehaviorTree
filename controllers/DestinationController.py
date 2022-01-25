@@ -25,7 +25,7 @@ class DestinationController():
         Opens the publisher topic and starts the publisher thread.
         """
 
-        publisher = rospy.Publisher('behavior_tree/controller/destination', String, queue_size=10)
+        publisher = rospy.Publisher('behavior_tree/controllers/destination', String, queue_size=10)
 
         # Publish input on different thread.
         # This is prevent blocking by asking for input.
@@ -39,7 +39,7 @@ class DestinationController():
 
         # callback_lambda = lambda data : handle_input(data, controller)
         callback_lambda = lambda data : self._handle_input(data)
-        subscriber = rospy.Subscriber('behavior_tree/controller/destination', String, callback_lambda)
+        subscriber = rospy.Subscriber('behavior_tree/controllers/destination', String, callback_lambda)
 
     def start_publishing(self):
         """
@@ -101,6 +101,7 @@ class DestinationController():
         """
 
         try:
+            rate = rospy.Rate(20) # 20hz
             while not rospy.is_shutdown():
                 inp_x = input('Enter coordinate x: ')
                 inp_y = input('Enter coordinate y: ')
@@ -111,6 +112,8 @@ class DestinationController():
                     print('Not currently publishing...')
                 else:
                     print('Did not publish - incorrect input.')
+                    
+                rate.sleep()
         except:
             print('Error encountered in DestinationController publisher.')
     

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import rospy
-from std_msgs.msg import String
+from LocalisationController import LocalisationController
+from DestinationController import DestinationController
 
 from node import *
 
@@ -36,7 +36,7 @@ class GetDestination(Behavior):
     INVALID: --
     """
 
-    def __init__(self, destination_controller):
+    def __init__(self, destination_controller: DestinationController):
         super().__init__()
         self.controller = destination_controller
 
@@ -272,3 +272,68 @@ class EmergencyMovement(Behavior):
     def _update(self, blackboard: dict):
         print('EMERGENCY!')
         return STATUS.SUCCESS
+
+
+class TagDetected(Behavior):
+    """
+    Checks if a tag is currently being detected.
+    
+    SUCCESS: A tag is detected.
+    FAILURE: A tag is not detected.
+    RUNNING: --
+    INVALID: --
+    """
+    
+    def __init__(self, localisation_controller: LocalisationController):
+        super().__init__()
+        self._controller = localisation_controller
+    
+    def _update(self, blackboard: dict):
+        if self._controller.has_detection():
+            return STATUS.SUCCESS
+        return STATUS.FAILURE
+    
+
+class ShouldReLocalise(Behavior):
+    """
+    Checks if the rover would benefit from a re-localisation
+    using the currently detected tag.
+    
+    SUCCESS: The rover should re-localise.
+    FAILURE: The rover does not need to re-localise.
+    RUNNING: --
+    INVALID: --
+    """
+    
+    def __init__(self, localisation_controller: LocalisationController):
+        super().__init__()
+        self._controller = localisation_controller
+    
+    def _update(self, blackboard: dict):
+        if self._controller.should_re_localise():
+            return STATUS.SUCCESS
+        return STATUS.FAILURE
+
+
+# TODO
+class ReLocalise(Behavior):
+    """
+    Attempt to re-localise the rover using the
+    currently detected tag(s).
+    
+    SUCCESS: Re-Localisation was successful.
+    FAILURE: Re-Localisation failed.
+    RUNNING: --
+    INVALID: --
+    """
+    
+    def __init__(self, localisation_controller: LocalisationController):
+        super().__init__()
+        self._controller = localisation_controller
+    
+    def _update(self, blackboard: dict):
+        print('RELOCALISING...')
+        if self._controller.re_localise():
+            print('FINISHED.')
+            return STATUS.SUCCESS
+        return STATUS.FAILURE
